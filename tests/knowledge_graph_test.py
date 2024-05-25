@@ -1,4 +1,4 @@
-from nlp-utils.knowledge_graph import KnowledgeGraph
+from nlp_utils.knowledge_graph import KnowledgeGraph
 
 
 def test_knowledge_graph():

@@ -1,4 +1,4 @@
-import stanza
+import stanza, logging
 from collections import Counter
 import networkx as nx
 import matplotlib.pyplot as plt
