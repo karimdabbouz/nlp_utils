@@ -75,7 +75,19 @@ class ArticleLoader():
         '''
         common_indices = []
         result = []
-        df = pd.DataFrame(self.raw_articles)
+        # Only use a subset of columns since the DB tables have inconsistent columns
+        df = pd.DataFrame(columns=['id', 'medium', 'kicker', 'headline', 'teaser', 'body'])
+        for x in loader.raw_articles:
+            entry = {
+                'id': x.id,
+                'medium': x.medium,
+                'kicker': x.kicker,
+                'headline': x.headline,
+                'teaser': x.teaser,
+                'body': x.body
+            }
+            new_df = pd.DataFrame([entry])
+            df = pd.concat([df, new_df], ignore_index=True)
         if 'kicker' in parts_of_article:
             filtered_df = df[(df['kicker'].notna()) & (df['kicker'] != '')]
             kicker_indices = list(filtered_df.index)
@@ -98,6 +110,7 @@ class ArticleLoader():
             result_df = df.iloc[common_indices]
         
         result = [(f'{row.id}_{row.medium}', '') for i, row in result_df.iterrows()]
+        
         if 'kicker' in parts_of_article:
             result = [(v[0], v[1] + ' ' + result_df.iloc[i].kicker) for i, v in enumerate(result)]
         if 'headline' in parts_of_article:
