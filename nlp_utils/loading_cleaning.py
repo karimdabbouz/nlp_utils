@@ -94,7 +94,7 @@ class ArticleLoader():
             common_indices = list(set.intersection(*common_indices))
             result_df = df.iloc[common_indices]
         
-        result = [(f'{row.id}_{row.medium}', '') for i, row in df.iterrows()]
+        result = [(f'{row.id}_{row.medium}', '') for i, row in result_df.iterrows()]
         if 'kicker' in parts_of_article:
             result = [(v[0], v[1] + ' ' + result_df.iloc[i].kicker) for i, v in enumerate(result)]
         if 'headline' in parts_of_article:
