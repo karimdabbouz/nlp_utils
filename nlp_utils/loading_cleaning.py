@@ -77,7 +77,7 @@ class ArticleLoader():
         result = []
         # Only use a subset of columns since the DB tables have inconsistent columns
         df = pd.DataFrame(columns=['id', 'medium', 'kicker', 'headline', 'teaser', 'body'])
-        for x in loader.raw_articles:
+        for x in self.raw_articles:
             entry = {
                 'id': x.id,
                 'medium': x.medium,
