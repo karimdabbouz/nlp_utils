@@ -16,7 +16,7 @@ class Bertopic():
     Topics are computed on instantiation. BERTopic's built-in methods are exposed via the attributes.
     '''
 
-    def __init__(self, embedding_model, documents):
+    def __init__(self, embedding_model, min_topic_size, documents):
         self.documents = documents
         self.embedding_model = SentenceTransformer(embedding_model)
         self.umap_model = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric='cosine')
@@ -31,7 +31,8 @@ class Bertopic():
             hdbscan_model=self.hdbscan_model,
             vectorizer_model=self.vectorizer_model,
             ctfidf_model=self.ctfidf_model,
-            representation_model=self.representation_model
+            representation_model=self.representation_model,
+            min_topic_size=min_topic_size
         )
         self.topic_model = self.compute_topics()
         self.topic_table = self.bertopic.get_topic_info()
