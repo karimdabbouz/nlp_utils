@@ -31,7 +31,10 @@ class ArticleLoader():
         articles = []
         for table in self.tables:
             table_data = Table(table, self.metadata, autoload_with=self.engine)
-            query = select(table_data).where(and_(table_data.c.date_published >= self.start_date, table_data.c.date_published <= self.end_date))
+            try:
+                query = select(table_data).where(and_(table_data.c.date_published >= self.start_date, table_data.c.date_published <= self.end_date))
+            except:
+                query = select(table_data).where(and_(table_data.c.datetime_published >= self.start_date, table_data.c.datetime_published <= self.end_date))
             with self.engine.connect() as connection:
                 response = connection.execute(query)
                 articles.extend(response)
