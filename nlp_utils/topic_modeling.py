@@ -2,10 +2,16 @@ from nltk.corpus import stopwords
 from umap import UMAP
 from hdbscan import HDBSCAN
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.cluster import KMeans, HDBSCAN
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import calinski_harabasz_score
+from sklearn.metrics import make_scorer
 from bertopic import BERTopic
 from bertopic.representation import KeyBERTInspired, TextGeneration
 from bertopic.vectorizers import ClassTfidfTransformer
 from sentence_transformers import SentenceTransformer
+import numpy as np
+import collections
 
 
 
@@ -46,3 +52,111 @@ class Bertopic():
         '''
         topics, probs = self.bertopic.fit_transform(self.documents)
         return topics, probs
+
+
+
+class SklearnClustering():
+    '''
+    This class creates clusters from transformer embeddings using either K-means or HDBSCAN.
+    You can either define the num of clusters yourself or let it choose the best-scoring params.
+    :param str algorithm: The clustering algorithm - "kmeans" (will add more later)
+    :param np.array embeddings: The embeddings in shape (num_docs, num_dimensions)
+    :param list documents: The list of documents used to create the embeddings
+    :param boolean auto_score: Set to True to auto-choose the best scoring params using GridSearchCv
+    :param scrorer: The scoring method to use in GridSearchCV
+    :param int n_clusters: The number of clusters to use in Kmeans or the min number of clusters in HDBSCAN (optional in mode auto_score)
+    :param int n_samples: The min number of samples to use in HDBSCAN (optional in mode auto_score)
+    '''
+    def __init__(self, algorithm, embeddings, documents, auto_score=False, scorer=None, n_clusters=None, n_samples=None):
+        self.auto_score = auto_score
+        self.algorithm = algorithm
+        self.scorer = scorer
+        self.n_clusters = n_clusters
+        self.n_samples = n_samples
+        self.embeddings = embeddings
+        self.documents = documents
+        self.result = None
+
+
+    def dbcv_score(self, estimator, X):
+        '''
+        Custom scorer function using HDBSCAN's built-in relative_validity_ metric.
+        '''
+        labels = estimator.fit_predict(X)
+        return estimator.relative_validity_
+        
+    
+    def determine_params(self):
+        '''
+        Runs GridSearchCV and returns the best-performing K-means instance.
+        '''
+        if self.algorithm == 'kmeans':
+            param_grid = {
+                'n_clusters': [3, 5, 7, 9, 11]
+            }
+            kmeans = KMeans(random_state=666)
+            grid_search = GridSearchCV(kmeans, param_grid, cv=None, scoring=make_scorer(self.scorer))
+            grid_search.fit(self.embeddings)
+            return grid_search.best_estimator_
+        elif self.algorithm == 'hdbscan':
+            param_grid = {
+                'min_cluster_size': [3, 5, 7, 9, 11, 13, 15],
+                'min_samples': [2, 4, 6, 8, 10, 12],
+                'cluster_selection_method': ['eom', 'leaf']
+            }
+            hdbscan = HDBSCAN()
+            grid_search = GridSearchCV(hdbscan, param_grid, scoring=make_scorer(self.dbcv_score, greater_is_better=True, cv=None))
+            grid_search.fit(self.embeddings)
+            return grid_search.best_estimator_
+        else:
+            print(f'{self.algorithm} is not a valid clustering algorithm. Not generating clusters.')
+
+    
+    def format_result(self, cluster_labels):
+        '''
+        Uses the computed cluster_labels to format the result.
+        The result is stored as a class attribute.
+        '''
+        result = {}
+        unique_labels = list(collections.Counter(cluster_labels.tolist()).keys())
+        for label in unique_labels:
+            docs = []
+            for i, v in enumerate(self.documents):
+                if int(cluster_labels[i]) == label:
+                    docs.append(v)
+            result[label] = docs
+        self.result = result
+
+    
+    def generate_clusters(self):
+        '''
+        Generates clusters using sklearn
+        '''
+        if self.algorithm == 'kmeans':
+            if self.auto_score:
+                kmeans = self.determine_params()
+                print(f'GridSearchCV determined the best params: {kmeans}')
+                cluster_labels = kmeans.predict(self.embeddings)
+                self.format_result(cluster_labels)
+            else:
+                if self.n_clusters:
+                    kmeans = KMeans(n_clusters=self.n_clusters, random_state=666)
+                    cluster_labels = kmeans.fit_predict(self.embeddings)
+                    self.format_result(cluster_labels)
+                else:
+                    print('n_clusters must be set unless auto_score is set to True')
+        elif self.algorithm == 'hdbscan':
+            if self.auto_score:
+                hdbscan = self.determine_params()
+                print(f'GridSearchCV determined the best params: {hdbscan}')
+                cluster_labels = hdbscan.fit_predict(self.embeddings)
+                self.format_result(cluster_labels)
+            else:
+                if self.n_clusters and self.n_samples:
+                    hdbscan = HDBSCAN(min_cluster_size=self.n_clusters, min_samples=self.n_samples)
+                    cluster_labels = hdbscan.fit_predict(self.embeddings)
+                    self.format_result(cluster_labels)
+                else:
+                    print('n_clusters and n_samples must be set for HDBSCAN unless auto_score is set to True')
+        else:
+            print(f'{self.algorithm} is not a valid clustering algorithm. Not generating clusters.')
