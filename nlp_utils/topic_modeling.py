@@ -75,6 +75,7 @@ class SklearnClustering():
         self.n_samples = n_samples
         self.embeddings = embeddings
         self.documents = documents
+        self.labels = None
         self.result = None
 
 
@@ -137,11 +138,13 @@ class SklearnClustering():
                 kmeans = self.determine_params()
                 print(f'GridSearchCV determined the best params: {kmeans}')
                 cluster_labels = kmeans.predict(self.embeddings)
+                self.labels = cluster_labels
                 self.format_result(cluster_labels)
             else:
                 if self.n_clusters:
                     kmeans = KMeans(n_clusters=self.n_clusters, random_state=666)
                     cluster_labels = kmeans.fit_predict(self.embeddings)
+                    self.labels = cluster_labels
                     self.format_result(cluster_labels)
                 else:
                     print('n_clusters must be set unless auto_score is set to True')
@@ -150,11 +153,13 @@ class SklearnClustering():
                 hdbscan = self.determine_params()
                 print(f'GridSearchCV determined the best params: {hdbscan}')
                 cluster_labels = hdbscan.fit_predict(self.embeddings)
+                self.labels = cluster_labels
                 self.format_result(cluster_labels)
             else:
                 if self.n_clusters and self.n_samples:
                     hdbscan = HDBSCAN(min_cluster_size=self.n_clusters, min_samples=self.n_samples)
                     cluster_labels = hdbscan.fit_predict(self.embeddings)
+                    self.labels = cluster_labels
                     self.format_result(cluster_labels)
                 else:
                     print('n_clusters and n_samples must be set for HDBSCAN unless auto_score is set to True')
