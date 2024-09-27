@@ -19,7 +19,6 @@ class KnowledgeGraph():
     def __init__(self, document, graph_type: GraphType):
         self.document = document
         self.stanza_sentences = self.create_stanza_sentences()
-        self.entities = None
         self.graph_type = graph_type
         self.edges, self.nodes, self.labels, self.edge_labels = self.initialize_graph()
         
@@ -31,7 +30,6 @@ class KnowledgeGraph():
         logging.getLogger('stanza').setLevel(logging.WARNING)
         stanza_pipeline = stanza.Pipeline('de')
         stanza_doc = stanza_pipeline(self.document)
-        self.entities = stanza_doc.entities
         return stanza_doc.sentences
 
 
