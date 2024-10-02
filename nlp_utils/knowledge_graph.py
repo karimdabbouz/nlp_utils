@@ -30,6 +30,7 @@ class KnowledgeGraph():
         logging.getLogger('stanza').setLevel(logging.WARNING)
         stanza_pipeline = stanza.Pipeline('de')
         stanza_doc = stanza_pipeline(self.document)
+        del stanza_pipeline
         return stanza_doc.sentences, stanza_doc.entities
 
 
