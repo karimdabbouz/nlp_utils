@@ -26,7 +26,7 @@ class Bertopic():
         self.documents = documents
         self.embedding_model = SentenceTransformer(embedding_model)
         self.umap_model = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric='cosine')
-        self.hdbscan_model = HDBSCAN(min_cluster_size=15, metric='euclidean', cluster_selection_method='eom', prediction_data=True)
+        self.hdbscan_model = HDBSCAN(min_cluster_size=15, metric='euclidean', cluster_selection_method='eom')
         self.german_stopwords = stopwords.words('german')
         self.vectorizer_model = CountVectorizer(stop_words=self.german_stopwords)
         self.ctfidf_model = ClassTfidfTransformer()
