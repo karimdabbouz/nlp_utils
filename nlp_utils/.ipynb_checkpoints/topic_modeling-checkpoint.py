@@ -21,9 +21,10 @@ class Bertopic():
     It uses BERTopic to compute topics. Embeddings and other options can be passed in at instantiation.
     Topics are computed on instantiation. BERTopic's built-in methods are exposed via the attributes.
     '''
+
     def __init__(self, embedding_model, min_topic_size, documents):
         self.documents = documents
-        self.embedding_model = SentenceTransformer(embedding_model) if type(embedding_model) == str else embedding_model
+        self.embedding_model = SentenceTransformer(embedding_model)
         self.umap_model = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric='cosine')
         self.hdbscan_model = HDBSCAN(min_cluster_size=15, metric='euclidean', cluster_selection_method='eom')
         self.german_stopwords = stopwords.words('german')
